@@ -67,6 +67,7 @@ class TrackerNode(Node):
         )
         self.create_subscription(Image, input_topic, self.image_callback, 1)
         self.results_pub = self.create_publisher(YoloResult, result_topic, 1)
+        self.results_vision_msg_pub = self.create_publisher(Detection2DArray, result_topic+"_vision", 1)
         self.result_image_pub = self.create_publisher(Image, result_image_topic, 1)
 
     def image_callback(self, msg):
@@ -103,6 +104,7 @@ class TrackerNode(Node):
                 yolo_result_msg.masks = self.create_segmentation_masks(results)
             self.results_pub.publish(yolo_result_msg)
             self.result_image_pub.publish(yolo_result_image_msg)
+            self.results_vision_msg_pub.publish(yolo_result_msg.detections)
 
     def create_detections_array(self, results):
         detections_msg = Detection2DArray()
