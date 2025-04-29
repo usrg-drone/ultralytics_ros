@@ -54,7 +54,9 @@ ament_target_dependencies(tracker_with_cloud_node
   PCL
 )
 
-rosidl_get_typesupport_target(cpp_typesupport_target ${PROJECT_NAME} "rosidl_typesupport_cpp")
+# rosidl_get_typesupport_target(cpp_typesupport_target ${PROJECT_NAME} "rosidl_typesupport_cpp")
+rosidl_target_interfaces(tracker_with_cloud_node ${PROJECT_NAME} "rosidl_typesupport_cpp")
+
 target_link_libraries(tracker_with_cloud_node "${cpp_typesupport_target}")
 
 install(TARGETS
@@ -70,6 +72,8 @@ install(PROGRAMS
 install(DIRECTORY
   launch
   rviz2
+  cfg
+  models
   DESTINATION share/${PROJECT_NAME}
 )
 
