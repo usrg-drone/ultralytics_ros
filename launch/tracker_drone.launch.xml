@@ -18,6 +18,7 @@
   <arg name="result_font" default="Arial.ttf"/>
   <arg name="result_labels" default="true"/>
   <arg name="result_boxes" default="true"/>
+  <arg name="use_compressed_input" default="true"/>
   <group>
     <push-ros-namespace namespace="$(var ns)"/>
 
@@ -38,6 +39,7 @@
       <param name="result_font" value="$(var result_font)"/>
       <param name="result_labels" value="$(var result_labels)"/>
       <param name="result_boxes" value="$(var result_boxes)"/>
+      <param name="use_compressed_input" value="$(var use_compressed_input)"/>
       <!--<param name="classes" value="0, 1, 2" value-sep=", "/>-->
       <param name="device" value="$(var device)"/>
     </node>
