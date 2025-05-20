@@ -22,7 +22,8 @@ import numpy as np
 import rclpy
 from ament_index_python.packages import get_package_share_directory
 from rclpy.node import Node
-from sensor_msgs.msg import Image
+from rclpy.qos import qos_profile_sensor_data
+from sensor_msgs.msg import Image, CompressedImage
 from ultralytics import YOLO
 from vision_msgs.msg import Detection2D, Detection2DArray, ObjectHypothesisWithPose
 from ultralytics_ros.msg import YoloResult
@@ -51,7 +52,7 @@ class TrackerNode(Node):
         path = get_package_share_directory("ultralytics_ros")
         yolo_model = self.get_parameter("yolo_model").get_parameter_value().string_value
         self.model = YOLO(f"{path}/models/{yolo_model}")
-        self.model.fuse()
+        # self.model.fuse()
 
         self.bridge = cv_bridge.CvBridge()
         self.use_segmentation = yolo_model.endswith("-seg.pt")
@@ -65,13 +66,23 @@ class TrackerNode(Node):
         result_image_topic = (
             self.get_parameter("result_image_topic").get_parameter_value().string_value
         )
-        self.create_subscription(Image, input_topic, self.image_callback, 1)
-        self.results_pub = self.create_publisher(YoloResult, result_topic, 1)
-        self.results_vision_msg_pub = self.create_publisher(Detection2DArray, result_topic+"_vision", 1)
-        self.result_image_pub = self.create_publisher(Image, result_image_topic, 1)
+        self.use_compressed = input_topic.endswith("compressed") #self.get_parameter("use_compressed_input").get_parameter_value().bool_value
+        if self.use_compressed:
+            self.get_logger().info(f"Subscribing to compressed image topic: {input_topic}")
+            self.create_subscription(CompressedImage, input_topic, self.image_callback, qos_profile_sensor_data)
+        else:
+            self.get_logger().info(f"Subscribing to raw image topic: {input_topic}")
+            self.create_subscription(Image, input_topic, self.image_callback, qos_profile_sensor_data)
+
+        self.results_pub = self.create_publisher(YoloResult, result_topic, qos_profile_sensor_data)
+        self.results_vision_msg_pub = self.create_publisher(Detection2DArray, result_topic+"_vision", qos_profile_sensor_data)
+        self.result_image_pub = self.create_publisher(Image, result_image_topic, qos_profile_sensor_data)
 
     def image_callback(self, msg):
-        cv_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding="bgr8")
+        if self.use_compressed:
+            cv_image = self.bridge.compressed_imgmsg_to_cv2(msg, desired_encoding="bgr8")
+        else:
+            cv_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding="bgr8")
 
         conf_thres = self.get_parameter("conf_thres").get_parameter_value().double_value
         iou_thres = self.get_parameter("iou_thres").get_parameter_value().double_value
@@ -113,8 +124,8 @@ class TrackerNode(Node):
         confidence_score = results[0].boxes.conf
         for bbox, cls, conf in zip(bounding_box, classes, confidence_score):
             detection = Detection2D()
-            detection.bbox.center.position.x = float(bbox[0])
-            detection.bbox.center.position.y = float(bbox[1])
+            detection.bbox.center.x = float(bbox[0])
+            detection.bbox.center.y = float(bbox[1])
             detection.bbox.size_x = float(bbox[2])
             detection.bbox.size_y = float(bbox[3])
             hypothesis = ObjectHypothesisWithPose()
