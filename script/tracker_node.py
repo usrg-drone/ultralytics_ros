@@ -124,8 +124,8 @@ class TrackerNode(Node):
         confidence_score = results[0].boxes.conf
         for bbox, cls, conf in zip(bounding_box, classes, confidence_score):
             detection = Detection2D()
-            detection.bbox.center.x = float(bbox[0])
-            detection.bbox.center.y = float(bbox[1])
+            detection.bbox.center.position.x = float(bbox[0])
+            detection.bbox.center.position.y = float(bbox[1])
             detection.bbox.size_x = float(bbox[2])
             detection.bbox.size_y = float(bbox[3])
             hypothesis = ObjectHypothesisWithPose()
