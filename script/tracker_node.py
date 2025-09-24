@@ -69,10 +69,10 @@ class TrackerNode(Node):
         self.use_compressed = input_topic.endswith("compressed") #self.get_parameter("use_compressed_input").get_parameter_value().bool_value
         if self.use_compressed:
             self.get_logger().info(f"Subscribing to compressed image topic: {input_topic}")
-            self.create_subscription(CompressedImage, input_topic, self.image_callback, qos_profile_sensor_data)
+            self.create_subscription(CompressedImage, input_topic, self.image_callback, 1)
         else:
             self.get_logger().info(f"Subscribing to raw image topic: {input_topic}")
-            self.create_subscription(Image, input_topic, self.image_callback, qos_profile_sensor_data)
+            self.create_subscription(Image, input_topic, self.image_callback, 1)
 
         self.results_pub = self.create_publisher(YoloResult, result_topic, qos_profile_sensor_data)
         self.results_vision_msg_pub = self.create_publisher(Detection2DArray, result_topic+"_vision", qos_profile_sensor_data)
@@ -124,8 +124,8 @@ class TrackerNode(Node):
         confidence_score = results[0].boxes.conf
         for bbox, cls, conf in zip(bounding_box, classes, confidence_score):
             detection = Detection2D()
-            detection.bbox.center.position.x = float(bbox[0])
-            detection.bbox.center.position.y = float(bbox[1])
+            detection.bbox.center.x = float(bbox[0])
+            detection.bbox.center.y = float(bbox[1])
             detection.bbox.size_x = float(bbox[2])
             detection.bbox.size_y = float(bbox[3])
             hypothesis = ObjectHypothesisWithPose()
